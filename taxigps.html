@@ -51,10 +51,12 @@
     // use an SVG path to create an arrow shape
     path: "M14.5,29 23.5,0 14.5,9 5.5,0z",
     color: "#ffff00",
-    outline: {
+      outline: {
       color: [0, 0, 133, 1],
       width: 0
-    },
+	  
+
+	  },
     // since the arrow points down, you can set the angle to 180
     // to force it to point up (0 degrees North) by default
     angle: 180,
@@ -82,13 +84,13 @@
              
               stops: [
                 {
-                  value: 0.1,
+                  value: 0,
                   color: "#FFFF00",
-                  label: "5%"
+                  label: "0%"
                 },
                
 				{
-                  value: 425,
+                  value: 35.06,
                   color: "#FF3030",
                   label: "100%"
                 }
@@ -135,3 +137,4 @@
     <div id="viewDiv"></div>
   </body>
 </html>
+
