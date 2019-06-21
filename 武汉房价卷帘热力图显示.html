@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>多功能显示</title>
+<style>
+  html,body,#viewDiv{
+    padding:0;
+	margin:0;
+	height:100%;
+	width:100%;
+  }
+  #layerToggle{
+    top: 20px;
+	right: 20px;
+	position: absolute;
+	z-index: 99;
+	background-color: white;
+	border-radius: 8px;
+	padding: 10px;
+	opacity: 0.75;
+  }
+</style>
+<link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
+<script src="https://js.arcgis.com/4.10/"></script>
+<script>
+require([
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/FeatureLayer",
+  "esri/core/watchUtils",
+  "esri/views/SceneView",
+  "esri/layers/TileLayer",
+  "esri/layers/CSVLayer",
+  "esri/widgets/Legend"
+], function(Map, MapView, FeatureLayer,watchUtils,SceneView,TileLayer,CSVLayer,Legend) {
+	
+	
+	const url =
+          "https://kk201314004.github.io/123/wuhan_price_5.csv";
+
+        // Paste the url into a browser's address bar to download and view the attributes
+        // in the CSV file. These attributes include:
+        // * mag - magnitude
+        // * type - earthquake or other event such as nuclear test
+        // * place - location of the event
+        // * time - the time of the event
+
+        const template = {
+          title: "{详细情况}",
+          content: "地点：{Name} 建房时间：{time}"
+        };
+
+        // The heatmap renderer assigns each pixel in the view with
+        // an intensity value. The ratio of that intensity value
+        // to the maxPixel intensity is used to assign a color
+        // from the continuous color ramp in the colorStops property
+
+        const renderer = {
+          type: "heatmap",
+		  field: "price",
+          colorStops: [{
+							color: "rgba(63, 40, 102, 0)",
+							ratio: 0
+						},
+						{
+							color: "#472b77",
+							ratio: 0.083
+						},
+						{
+							color: "#4e2d87",
+							ratio: 0.166
+						},
+						{
+							color: "#563098",
+							ratio: 0.249
+						},
+						{
+							color: "#5d32a8",
+							ratio: 0.332
+						},
+						{
+							color: "#6735be",
+							ratio: 0.415
+						},
+						{
+							color: "#7139d4",
+							ratio: 0.498
+						},
+						{
+							color: "#7b3ce9",
+							ratio: 0.581
+						},
+						{
+							color: "#853fff",
+							ratio: 0.664
+						},
+						{
+							color: "#a46fbf",
+							ratio: 0.747
+						},
+						{
+							color: "#c29f80",
+							ratio: 0.83
+						},
+						{
+							color: "#e0cf40",
+							ratio: 0.913
+						},
+						{
+							color: "#ffff00",
+							ratio: 1
+						}
+					],
+          maxPixelIntensity: 250000,
+          minPixelIntensity: 0
+        };
+
+        const layer = new CSVLayer({
+          url: url,
+          title: "2018年武汉市房价分布",
+          copyright: "USGS Earthquakes",
+          popupTemplate: template,
+          renderer: renderer
+        });
+	
+	var select = document.getElementById("test");
+	var basemaps = [
+		"dark-gray",
+		"osm",
+		"oceans",
+		"terrain",
+		"gray"
+	];
+	var map = new Map({
+		basemap:basemaps[0],
+		layers: [layer]
+	});
+  var view = new MapView({
+    container:"viewDiv",
+		map:map,
+		zoom:12,
+		center:[114.3,30.6]
+  });
+  var view1 = new MapView({
+  	container:"view1Div"
+  });
+  document.querySelector(".btns").addEventListener("click", function(event) {
+        	var id = event.target.getAttribute("value");
+        	if(id){
+        		view.map.basemap = basemaps[id]
+        		for(var i = 0; i < select.length; i++)
+        		{
+        			var m = select.options[i].value;
+        			view.map.add(TileLayers[m]);
+        		}
+        	}
+        });
+  
+  var layers = [
+  	"USA States",
+  	"Great_Circle",
+  	"Electric"
+  ];
+  var usastates = new TileLayer({
+  	url:"https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer",
+    id: "0",
+    visible: false
+  });
+  var greatcircle = new FeatureLayer({
+  	url:"https://services3.arcgis.com/GVgbJbqm8hXASVYi/ArcGIS/rest/services/USA%20States/FeatureServer",
+    id: "1",
+    visible: false
+  });
+  var electric = new FeatureLayer({
+  	url:"https://services3.arcgis.com/GVgbJbqm8hXASVYi/ArcGIS/rest/services/Great_Circle/FeatureServer",
+    id: "2",
+    visible: false
+  });
+  
+  
+  
+  map.add(usastates);
+  map.add(greatcircle);
+  map.add(electric);
+
+
+       
+
+  var streetsLayerToggle = document.getElementById("0");
+  var greatcircleLayerToggle = document.getElementById("1");
+  var electricleLayerToggle = document.getElementById("2");
+
+        
+  streetsLayerToggle.addEventListener("change", function () {
+  usastates.visible = streetsLayerToggle.checked;
+  });
+  
+  greatcircleLayerToggle.addEventListener("change", function () {
+  greatcircle.visible = greatcircleLayerToggle.checked;
+  });
+  
+  electricleLayerToggle.addEventListener("change", function () {
+  electric.visible = electricleLayerToggle.checked;
+  });
+  
+	
+  var coordsWidget = document.getElementById("coordsWidget");
+
+  view.ui.add(coordsWidget, "bottom-right");
+  function showCoordinates(pt) {
+    var coords = "Lat/Lon " + pt.latitude.toFixed(3) + " " + pt.longitude.toFixed(3) +
+        " | Scale 1:" + Math.round(view.scale * 1) / 1 +
+        " | Zoom " + view.zoom;
+    coordsWidget.innerHTML = coords;
+  };
+  view.watch(["stationary"], function() {
+    showCoordinates(view.center);
+    
+  });
+	
+  view.on(["pointer-move"], function(evt) {
+    showCoordinates(view.toMap({ x: evt.x, y: evt.y }));
+  });
+  
+  var btf = document.getElementById("btf");
+  btf.addEventListener("click",function(){
+	  var zoom = view.zoom;
+	  var x = view.center.longitude.toFixed(3);
+	  var y = view.center.latitude.toFixed(3);
+	  var view1Div = document.getElementById("view1Div");
+	  var view2Div = document.getElementById("view2Div");
+	  if(view1Div.style.height == "100%")
+	  {
+	  	alert("已经是分屏显示了！")
+	  }else{
+	  	view1Div.style.height = "100%";
+	  	view2Div.style.height = "100%";
+	  	var map = new Map({
+	  		basemap:"oceans"
+	  	});
+	  	view1.map = map;
+	  	view1.zoom = zoom;
+	  	view1.center = [x,y];
+	  	view.container = "view2Div";
+	  }
+	});
+	var watch1, watch2, watch3;
+	view.on("click",function(){
+		if(watch2!=null)
+		{
+			watch2.remove();
+		}
+		watch1 =  watchUtils.whenTrue(view, "stationary", function() {
+			var zoom = view.zoom;
+    	view1.zoom = zoom;
+    	var x = view.center.longitude.toFixed(3);
+	  	var y = view.center.latitude.toFixed(3);
+	  	view1.center = [x,y];
+		});
+	});
+	view1.on("click",function(){
+		if(watch1!=null)
+		{
+			watch1.remove();
+		}
+		watch2 = watchUtils.whenTrue(view1, "stationary", function() {
+			var zoom = view1.zoom;
+    	view.zoom = zoom;
+    	var x = view1.center.longitude.toFixed(3);
+	  	var y = view1.center.latitude.toFixed(3);
+	  	view.center = [x,y];
+		});
+	});
+	
+	var btq = document.getElementById("btq");
+	btq.addEventListener("click",function(){
+		if(watch1!=null)
+		{
+			watch1.remove();
+		}
+		if(watch2!=null)
+		{
+			watch2.remove();
+		}
+		var body=document.getElementById("body");
+		if(body.onmousemove!=null)
+		{
+			body.onmousemove=function(){};
+		}
+	  var view1Div = document.getElementById("view1Div");
+	  
+	  var view2Div = document.getElementById("view2Div");
+	  var view3Div = document.getElementById("view3Div");
+	  if(view1Div.style.height == "0px"&&view3Div.style.height == "0px")
+	  {
+	  	alert("已经是全屏显示了！")
+	  }else{
+	  	view1Div.style.height = "0px";
+	  	view2Div.style.height = "0px";
+	  	view3Div.style.height = "0px";
+	  	view.container = "viewDiv";
+	  };
+	});
+	
+	var btj = document.getElementById("btj");
+	btj.addEventListener("click",function(){
+		var zoom = view.zoom;
+	  var x = view.center.longitude.toFixed(3);
+	  var y = view.center.latitude.toFixed(3);
+		var map = new Map({
+	  		basemap:"oceans"
+	  	});
+	  var view3Div = document.getElementById("view3Div");
+	  view3Div.style.height = "100%";
+	  var view3 = new MapView({
+    		container:"view3Div",
+				map:map,
+				zoom:zoom,
+				center:[x,y]
+  		});
+  	var body=document.getElementById("body");
+  	body.onmousemove=function(oEvent){
+  		 if(window.event){
+            oEvent=window.event;
+         }
+  		 view3Div.style.clip="rect(0px,"+oEvent.clientX +"px,1000px,0px)";
+  	};
+	});
+	
+});
+</script>
+</head>
+<body id="body">
+  <div id="viewDiv">
+	<div id="view1Div" style="position: fixed ! important; float: left; width: 50%; height: 0%;"></div>
+	<div id="view2Div" style="position: fixed ! important; float: left; width: 50%; height: 0%; right:0px;"></div>
+	<div id="view3Div" style="position: fixed ! important; float: left; width: 100%; height: 0%; right:0px;"></div>
+  	<div class="btns" style="position: fixed ! important; left: 5px; top: 100px;">
+  		
+    		<select class="demo" multiple="multiple">  
+    <optgroup label="图层">  
+        <option value="0">dark-gray</option>  
+        <option value="1">osm</option>  
+        <option value="3">ocean</option>  
+        <option value="4">gray</option>  
+    </optgroup>  
+    
+</select> 
+    	</div>
+   
+	<div style="position: fixed ! important; left: 5px; top: 200px;">
+		<label><font size="5">功能</font></label><br/>
+		<button id="btf">Half Screen</button><br/>
+		<button id="btq">Full Screen</button><br/>
+		<button id="btj">Layer Swipe</button><br/>
+	</div>
+	
+  	
+  	<div id="coordsWidget" class="esri-widget esri-component" style="padding:7px 15px 5px;"></div>
+  	
+  </div>
+</body>
+</html>

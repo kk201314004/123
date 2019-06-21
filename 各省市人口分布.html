@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>各省市人口分布</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.11/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.11/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/layers/GeoJSONLayer",
+        "esri/widgets/Legend",
+        "esri/views/MapView"
+      ], function(Map, GeoJSONLayer,Legend, MapView) {
+        // If GeoJSON files are not on the same domain as your website, a CORS enabled server
+        // or a proxy is required.
+        
+        const defaultSym = {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          outline: {
+            // autocasts as new SimpleLineSymbol()
+            color: [128, 128, 128, 0.2],
+            width: "0.5px"
+          }
+        };
+       
+
+        // Paste the url into a browser's address bar to download and view the attributes
+        // in the GeoJSON file.
+       
+       
+       
+        const rotationRenderer = {
+          type: "simple", // autocasts as new SimpleRenderer()
+          symbol: defaultSym,
+          label: "population",
+          visualVariables: [
+            {
+              type: "color",
+              field: "pop2010",
+              
+              legendOptions: {
+                title: "% population in China"
+              },
+              stops: [
+              {
+                  value: 552300,
+                  color: "#FFFCD4",
+                  label: "0%"
+                },
+                
+                {
+                  value: 104303132,
+                  color: "#FFFF00",
+                  label: "100%"
+                }
+              ]
+            }
+          ]
+        };
+       
+       
+       
+       
+
+        const geojsonLayer = new GeoJSONLayer({
+          url: "https://kk201314004.github.io/123/population.geojson",
+         renderer: rotationRenderer
+          
+        });
+        const map = new Map({
+          basemap: "gray",
+          layers: [geojsonLayer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          center: [115, 29],
+          zoom: 4,
+          map: map
+        });
+        view.ui.add(
+          new Legend({
+            view: view
+          }),
+          "top-right"
+        );
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
